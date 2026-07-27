@@ -24,7 +24,21 @@ DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "downloads")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 # Qualities we offer to the user, provided the source video actually has them.
-CANDIDATE_HEIGHTS = [360, 480, 720, 1080]
+CANDIDATE_HEIGHTS = [144, 240, 360, 480, 720, 1080, 1440, 2160]
+
+# Cloud hosts (Render, Railway, etc.) use datacenter IPs that YouTube flags far
+# more aggressively than home IPs, sometimes responding with "Sign in to
+# confirm you're not a bot". The documented fix is to supply cookies from a
+# logged-in YouTube session. Set the COOKIES_FILE env var to a path containing
+# a Netscape-format cookies.txt (e.g. a Render "Secret File") to enable this -
+# never commit that file to git. (Forcing alternate player clients like
+# android/tv was tried and rejected here - it currently drops format
+# availability from 27 formats/1080p down to 5 formats/360p due to unrelated
+# YouTube-side experiments, without confirmed benefit against the bot check.)
+YTDLP_BASE_OPTS = {}
+COOKIES_FILE = os.environ.get("COOKIES_FILE")
+if COOKIES_FILE and os.path.isfile(COOKIES_FILE):
+    YTDLP_BASE_OPTS["cookiefile"] = COOKIES_FILE
 
 # In-memory job tracker: job_id -> {"status": "downloading"|"processing"|"finished"|"error", "percent": int, ...}
 # A plain dict is enough for a single-user local app; a lock just protects concurrent requests.
@@ -43,7 +57,7 @@ def info():
     if not url:
         return jsonify({"error": "Please provide a YouTube URL."}), 400
 
-    ydl_opts = {"quiet": True, "skip_download": True, "noplaylist": True}
+    ydl_opts = {**YTDLP_BASE_OPTS, "quiet": True, "skip_download": True, "noplaylist": True}
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             data = ydl.extract_info(url, download=False)
@@ -105,6 +119,7 @@ def _run_download(job_id, url, quality):
         # Single audio-only download - it can use the full 0-99% range on its own.
         hook = _make_progress_hook(job_id, phase_ranges=[(0, 99)])
         ydl_opts = {
+            **YTDLP_BASE_OPTS,
             "format": "bestaudio/best",
             "outtmpl": outtmpl,
             "postprocessors": [
@@ -123,6 +138,7 @@ def _run_download(job_id, url, quality):
         # then the ffmpeg merge takes it to 100% once _run_download finishes.
         hook = _make_progress_hook(job_id, phase_ranges=[(0, 90), (90, 99)])
         ydl_opts = {
+            **YTDLP_BASE_OPTS,
             "format": f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}]",
             "outtmpl": outtmpl,
             "merge_output_format": "mp4",
