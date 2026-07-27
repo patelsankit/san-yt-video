@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTube Downloader</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+  <h1>YouTube Downloader</h1>
+
+  <div class="search-box">
+    <input type="text" id="urlInput" placeholder="Paste a YouTube URL here...">
+    <button id="fetchBtn">Fetch</button>
+  </div>
+
+  <p id="statusMsg" class="status"></p>
+
+  <div id="result" class="result hidden">
+    <img id="thumbnail" src="" alt="Video thumbnail">
+    <div class="details">
+      <h2 id="videoTitle"></h2>
+      <p id="videoDuration" class="duration"></p>
+      <div id="formats" class="formats"></div>
+      <div id="progressContainer" class="progress-container hidden">
+        <div class="progress-track">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+        <span id="progressLabel" class="progress-label">0%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
