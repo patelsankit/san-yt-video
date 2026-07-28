@@ -39,6 +39,11 @@ YTDLP_BASE_OPTS = {}
 COOKIES_FILE = os.environ.get("COOKIES_FILE")
 if COOKIES_FILE and os.path.isfile(COOKIES_FILE):
     YTDLP_BASE_OPTS["cookiefile"] = COOKIES_FILE
+    print(f"[startup] cookies file found and enabled: {COOKIES_FILE}", flush=True)
+elif COOKIES_FILE:
+    print(f"[startup] COOKIES_FILE is set to '{COOKIES_FILE}' but no file exists there - cookies NOT enabled", flush=True)
+else:
+    print("[startup] COOKIES_FILE not set - running without cookies", flush=True)
 
 # In-memory job tracker: job_id -> {"status": "downloading"|"processing"|"finished"|"error", "percent": int, ...}
 # A plain dict is enough for a single-user local app; a lock just protects concurrent requests.
